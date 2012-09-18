@@ -55,10 +55,10 @@ public class MavenHelperTest {
     }
 
     @Test
-    public void shouldReturn56Fixtures() {
+    public void shouldReturnAllFitnesseFixtures() {
         extractor = MavenHelper.newInstance(SlimFixtureApiTestUtil.getPomFile(), SlimFixtureApiTestUtil.getPropertyFile(false));
         Collection<String> fixtures = extractor.getFixtures();
-        assertEquals(56, fixtures.size());
+        assertEquals(59, fixtures.size());
     }
 
     @Test
