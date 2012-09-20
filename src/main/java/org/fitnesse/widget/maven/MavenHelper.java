@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -42,6 +43,7 @@ public class MavenHelper {
     private ConfigurationValidationResult validationResult;
     private ClassRealm fitnesseRealm;
     private Date instanceDate;
+    private String encoding;
 
     /**
      * Gets the instance.
@@ -92,6 +94,7 @@ public class MavenHelper {
         configuration = getConfiguration();
         fitnesseRealm = getClassRealm();
         instanceDate = new Date();
+        encoding = getEncoding(validationResult);
     }
 
     /**
@@ -107,6 +110,8 @@ public class MavenHelper {
             throw new FixtureApiPluginException(fileName + " not found at location: " + file.getPath());
         } else if (!file.isFile()) {
             throw new FixtureApiPluginException(fileName + " is not a file: " + file.getPath());
+        } else if (!file.canRead()) {
+            throw new FixtureApiPluginException(fileName + " could not be read: " + file.getPath());
         }
     }
 
@@ -134,9 +139,19 @@ public class MavenHelper {
             } else if (validationResult.getGlobalSettings() != null) {
                 localRepositoryLocation = validationResult.getGlobalSettings().getLocalRepository();
             }
-            configuration.setLocalRepository(localRepositoryLocation != null ? new File(localRepositoryLocation) : MavenEmbedder.DEFAULT_USER_SETTINGS_FILE);
+            configuration.setLocalRepository(localRepositoryLocation != null ? new File(localRepositoryLocation) : MavenEmbedder.defaultUserLocalRepository);
         }
         return configuration;
+    }
+
+    private String getEncoding(final ConfigurationValidationResult result) {
+        String encoding = "UTF-8";
+        if ((result != null) && (result.getUserSettings() != null) && (result.getUserSettings().getModelEncoding() != null)) {
+            encoding = result.getUserSettings().getModelEncoding();
+        } else if ((result != null) && (result.getGlobalSettings() != null) && (result.getGlobalSettings().getModelEncoding() != null)) {
+            encoding = result.getGlobalSettings().getModelEncoding();
+        }
+        return encoding;
     }
 
     /**
@@ -293,7 +308,8 @@ public class MavenHelper {
     private List<String> getFixturesFromJarFile(URL url) {
         List<String> fixtures = new ArrayList<String>();
         try {
-            JarInputStream jar = new JarInputStream(new FileInputStream(new File(url.getPath())));
+            final String jarPath = URLDecoder.decode(url.getPath(), "UTF-8");
+            JarInputStream jar = new JarInputStream(new FileInputStream(new File(jarPath)));
             JarEntry entry = jar.getNextJarEntry();
             while (entry != null) {
                 if (!entry.isDirectory() && isFixture(entry.getName())) {
