@@ -308,7 +308,7 @@ public class MavenHelper {
     private List<String> getFixturesFromJarFile(URL url) {
         List<String> fixtures = new ArrayList<String>();
         try {
-            final String jarPath = URLDecoder.decode(url.getPath(), "UTF-8");
+            final String jarPath = URLDecoder.decode(url.getPath(), encoding);
             JarInputStream jar = new JarInputStream(new FileInputStream(new File(jarPath)));
             JarEntry entry = jar.getNextJarEntry();
             while (entry != null) {
